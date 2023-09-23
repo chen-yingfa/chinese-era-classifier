@@ -36,7 +36,9 @@ def evaluate(
     model, output_dir: Path, valid_dataset: EraDataset, batch_size: int = 2
 ) -> dict:
     model.eval()
-    valid_loader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=False)
+    valid_loader = DataLoader(
+        valid_dataset, batch_size=batch_size, collate_fn=collate_fn, shuffle=False
+    )
     start_time = time.time()
     loss_fn = nn.CrossEntropyLoss()
     total_loss = 0
@@ -73,7 +75,6 @@ def evaluate(
     return scores
 
 
-
 class_names = ["先秦", "秦汉", "魏晋南北朝", "隋唐", "宋", "元", "明", "清", "近现代", "当代"]
 label_map = {label: i for i, label in enumerate(class_names)}
 
@@ -104,7 +105,9 @@ def train(
     log_interval = args.log_interval
 
     output_dir.mkdir(exist_ok=True, parents=True)
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    # Already shuffled
+    train_loader = DataLoader(
+        train_dataset, batch_size=batch_size, collate_fn=collate_fn)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.9)
     loss_fn = nn.CrossEntropyLoss()
