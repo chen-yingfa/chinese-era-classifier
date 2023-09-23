@@ -66,17 +66,18 @@ def load_features(
     label_map: dict[str, int],
     num_examples: int | None,
 ) -> dict[str, LongTensor]:
-    if features_path.exists():
+    if False and features_path.exists():
         print(f"Loading features from {features_path}")
         return torch.load(features_path)
     else:
         print(f"Features not found at {features_path}, creating from examples")
         examples = load_souyun_examples(examples_path, cnt=num_examples)
-        features = create_features(examples, tokenizer, label_map)
-        features_path.parent.mkdir(exist_ok=True, parents=True)
-        print(f"Saving features to {features_path}")
-        torch.save(features, features_path)
-        return features
+        # features = create_features(examples, tokenizer, label_map)
+        # features_path.parent.mkdir(exist_ok=True, parents=True)
+        # print(f"Saving features to {features_path}")
+        # torch.save(features, features_path)
+        # return features
+        return examples
 
 
 class EraDataset(Dataset):
@@ -101,6 +102,7 @@ class EraDataset(Dataset):
         )
 
     def __getitem__(self, index) -> dict[str, LongTensor]:
+        return self.examples[index]
         eg = {
             key: self.features[key][index]
             for key in ["input_ids", "attention_mask", "label"]

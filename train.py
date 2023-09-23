@@ -1,5 +1,5 @@
 import torch
-from torch import nn, Tensor
+from torch import nn, Tensor, LongTensor
 from pathlib import Path
 import time
 
@@ -71,6 +71,24 @@ def evaluate(
     output_dir.mkdir(exist_ok=True, parents=True)
     dump_json(scores, output_dir / "scores.json")
     return scores
+
+
+
+class_names = ["先秦", "秦汉", "魏晋南北朝", "隋唐", "宋", "元", "明", "清", "近现代", "当代"]
+label_map = {label: i for i, label in enumerate(class_names)}
+
+
+def collate_fn(batch):
+    texts = [eg["text"] for eg in batch]
+    labels = [label_map[eg["label"]] for eg in batch]
+    tokens: dict[str, LongTensor] = tokenizer(
+        texts, return_tensors="pt", padding=True, truncation=True, max_length=512
+    )
+    return {
+        "input_ids": tokens["input_ids"],
+        "attention_mask": tokens["attention_mask"],
+        "label": LongTensor(labels),
+    }
 
 
 def train(
@@ -193,6 +211,8 @@ def main():
     args.save(output_dir / "train_args.json")
 
     model, tok = load_model(args.pretrained_name, len(EraDataset.class_names))
+    global tokenizer
+    tokenizer = tok
 
     data_dir = Path(args.data_dir)
     train_data, dev_data, test_data = load_data(
