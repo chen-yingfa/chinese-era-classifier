@@ -66,18 +66,17 @@ def load_features(
     label_map: dict[str, int],
     num_examples: int | None,
 ) -> dict[str, LongTensor]:
-    if False and features_path.exists():
+    if features_path.exists():
         print(f"Loading features from {features_path}")
         return torch.load(features_path)
     else:
         print(f"Features not found at {features_path}, creating from examples")
         examples = load_souyun_examples(examples_path, cnt=num_examples)
-        # features = create_features(examples, tokenizer, label_map)
-        # features_path.parent.mkdir(exist_ok=True, parents=True)
-        # print(f"Saving features to {features_path}")
-        # torch.save(features, features_path)
-        # return features
-        return examples
+        features = create_features(examples, tokenizer, label_map)
+        features_path.parent.mkdir(exist_ok=True, parents=True)
+        print(f"Saving features to {features_path}")
+        torch.save(features, features_path)
+        return features
 
 
 class EraDataset(Dataset):
@@ -95,11 +94,12 @@ class EraDataset(Dataset):
         self.cache_dir = Path(cache_dir)
         self.num_examples = num_examples
 
-        label_map = {label: i for i, label in enumerate(self.class_names)}
-        features_path = self.cache_dir / f"{self.data_path.stem}.pt"
-        self.features: dict = load_features(
-            features_path, self.data_path, tokenizer, label_map, num_examples
-        )
+        # label_map = {label: i for i, label in enumerate(self.class_names)}
+        # features_path = self.cache_dir / f"{self.data_path.stem}.pt"
+        self.examples = load_souyun_examples(self.data_path, cnt=num_examples)
+        # self.features: dict = load_features(
+        #     features_path, self.data_path, tokenizer, label_map, num_examples
+        # )
 
     def __getitem__(self, index) -> dict[str, LongTensor]:
         return self.examples[index]
@@ -110,5 +110,5 @@ class EraDataset(Dataset):
         return eg
 
     def __len__(self) -> int:
-        return self.num_examples
-        return len(self.features["label"])
+        return len(self.examples)
+        # return len(self.features["label"])
