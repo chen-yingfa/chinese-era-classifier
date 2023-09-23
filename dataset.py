@@ -8,7 +8,7 @@ from torch.utils.data import Dataset
 from utils import load_json
 
 
-def load_souyun_examples(examples_path: Path, cnt: int | None = 10000) -> list[dict]:
+def load_souyun_examples(examples_path: Path, cnt: int | None = 100000) -> list[dict]:
     print(f"Loading examples from {examples_path}")
     raw_examples = load_json(examples_path)[:cnt]
     examples = []
@@ -60,14 +60,18 @@ def create_features(
 
 
 def load_features(
-    features_path: Path, examples_path: Path, tokenizer, label_map: dict[str, int]
+    features_path: Path,
+    examples_path: Path,
+    tokenizer,
+    label_map: dict[str, int],
+    num_examples: int | None,
 ) -> dict[str, LongTensor]:
     if features_path.exists():
         print(f"Loading features from {features_path}")
         return torch.load(features_path)
     else:
         print(f"Features not found at {features_path}, creating from examples")
-        examples = load_souyun_examples(examples_path)
+        examples = load_souyun_examples(examples_path, cnt=num_examples)
         features = create_features(examples, tokenizer, label_map)
         features_path.parent.mkdir(exist_ok=True, parents=True)
         print(f"Saving features to {features_path}")
@@ -79,16 +83,21 @@ class EraDataset(Dataset):
     class_names = ["先秦", "秦汉", "魏晋南北朝", "隋唐", "宋", "元", "明", "清", "近现代", "当代"]
 
     def __init__(
-        self, data_path: Path | str, tokenizer, cache_dir: str = ".data_cache"
+        self,
+        data_path: Path | str,
+        tokenizer,
+        cache_dir: str = ".data_cache",
+        num_examples: int | None = 100000,
     ):
         self.data_path = Path(data_path)
         self.tokenizer = tokenizer
         self.cache_dir = Path(cache_dir)
+        self.num_examples = num_examples
 
         label_map = {label: i for i, label in enumerate(self.class_names)}
         features_path = self.cache_dir / f"{self.data_path.stem}.pt"
         self.features: dict = load_features(
-            features_path, self.data_path, tokenizer, label_map
+            features_path, self.data_path, tokenizer, label_map, num_examples
         )
 
     def __getitem__(self, index) -> dict[str, LongTensor]:
@@ -99,5 +108,5 @@ class EraDataset(Dataset):
         return eg
 
     def __len__(self) -> int:
-        return 10000
-        return len(self.features['label'])
+        return self.num_examples
+        return len(self.features["label"])
