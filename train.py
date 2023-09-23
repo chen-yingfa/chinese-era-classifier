@@ -21,8 +21,12 @@ def load_model(pretrained_name: str, num_classes: int):
     return model, tok
 
 
-def load_data(data_dir: Path, tokenizer) -> tuple[EraDataset, EraDataset, EraDataset]:
-    train_dataset = EraDataset(data_dir / "train.json", tokenizer)
+def load_data(
+    data_dir: Path, tokenizer, num_examples: int
+) -> tuple[EraDataset, EraDataset, EraDataset]:
+    train_dataset = EraDataset(
+        data_dir / "train.json", tokenizer, num_examples=num_examples
+    )
     valid_dataset = EraDataset(data_dir / "valid.json", tokenizer, num_examples=5000)
     test_dataset = EraDataset(data_dir / "test.json", tokenizer, num_examples=5000)
     return train_dataset, valid_dataset, test_dataset
@@ -32,9 +36,7 @@ def evaluate(
     model, output_dir: Path, valid_dataset: EraDataset, batch_size: int = 2
 ) -> dict:
     model.eval()
-    valid_loader = DataLoader(
-        valid_dataset, batch_size=batch_size, shuffle=False
-    )
+    valid_loader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=False)
     start_time = time.time()
     loss_fn = nn.CrossEntropyLoss()
     total_loss = 0
@@ -188,12 +190,14 @@ def main():
     args = Args().parse_args()
     output_dir = Path(args.output_dir, args.pretrained_name)
     output_dir.mkdir(exist_ok=True, parents=True)
-    args.save(output_dir / 'train_args.json')
+    args.save(output_dir / "train_args.json")
 
     model, tok = load_model(args.pretrained_name, len(EraDataset.class_names))
 
     data_dir = Path(args.data_dir)
-    train_data, dev_data, test_data = load_data(data_dir, tok)
+    train_data, dev_data, test_data = load_data(
+        data_dir, tok, num_examples=args.num_examples
+    )
 
     if "train" in args.mode:
         train(model, output_dir, train_data, dev_data, args)

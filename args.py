@@ -7,6 +7,7 @@ class Args(Tap):
     lr: float = 3e-5
     log_interval: int = 8
     pretrained_name: str = "hsc748NLP/GujiRoBERTa_jian_fan"
+    num_examples: int | None = None
 
     mode: str = 'train-test'
     output_dir: str = 'result'
