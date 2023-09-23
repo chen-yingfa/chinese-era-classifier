@@ -4,7 +4,7 @@ from tap import Tap
 class Args(Tap):
     num_epochs: int = 4
     batch_size: int = 64
-    lr: float = 1e-5
+    lr: float = 3e-5
     log_interval: int = 8
     pretrained_name: str = "hsc748NLP/GujiRoBERTa_jian_fan"
 
