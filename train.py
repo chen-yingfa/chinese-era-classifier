@@ -76,12 +76,13 @@ def train(
     output_dir: Path,
     train_dataset: EraDataset,
     valid_dataset: EraDataset,
-    epochs: int = 2,
-    batch_size: int = 16,
-    lr: float = 3e-5,
-    log_interval: int = 1,
+    args: Args,
 ):
-    print("train")
+    epochs = args.num_epochs
+    batch_size = args.batch_size
+    lr = args.lr
+    log_interval = args.log_interval
+
     output_dir.mkdir(exist_ok=True, parents=True)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
@@ -194,7 +195,7 @@ def main():
     train_data, dev_data, test_data = load_data(data_dir, tok)
 
     if "train" in args.mode:
-        train(model, output_dir, train_data, dev_data)
+        train(model, output_dir, train_data, dev_data, args)
     if "test" in args.mode:
         test_output_dir = output_dir / "test"
         test_output_dir.mkdir(exist_ok=True, parents=True)
