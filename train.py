@@ -187,6 +187,7 @@ def load_best_ckpt(output_dir: Path) -> nn.Module:
 def main():
     args = Args().parse_args()
     output_dir = Path(args.output_dir, args.pretrained_name)
+    output_dir.mkdir(exist_ok=True, parents=True)
     args.save(output_dir / 'train_args.json')
 
     model, tok = load_model(args.pretrained_name, len(EraDataset.class_names))
