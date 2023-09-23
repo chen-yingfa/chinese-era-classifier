@@ -23,8 +23,8 @@ def load_model(pretrained_name: str, num_classes: int):
 
 def load_data(data_dir: Path, tokenizer) -> tuple[EraDataset, EraDataset, EraDataset]:
     train_dataset = EraDataset(data_dir / "train.json", tokenizer)
-    valid_dataset = EraDataset(data_dir / "valid.json", tokenizer)
-    test_dataset = EraDataset(data_dir / "test.json", tokenizer)
+    valid_dataset = EraDataset(data_dir / "valid.json", tokenizer, num_examples=5000)
+    test_dataset = EraDataset(data_dir / "test.json", tokenizer, num_examples=5000)
     return train_dataset, valid_dataset, test_dataset
 
 
