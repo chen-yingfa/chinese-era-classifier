@@ -7,6 +7,7 @@ from transformers import BertForSequenceClassification, BertTokenizerFast
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
+from args import Args
 from dataset import EraDataset
 from utils import dump_json, load_json
 
@@ -183,17 +184,18 @@ def load_best_ckpt(output_dir: Path) -> nn.Module:
 
 
 def main():
-    mode = "train-test"
-    pretrained_name = "hsc748NLP/GujiRoBERTa_jian_fan"
-    output_dir = Path("result", pretrained_name)
-    model, tok = load_model(pretrained_name, len(EraDataset.class_names))
+    args = Args().parse_args()
+    output_dir = Path(args.output_dir, args.pretrained_name)
+    args.save(output_dir / 'train_args.json')
 
-    data_dir = Path("../data/souyun")
+    model, tok = load_model(args.pretrained_name, len(EraDataset.class_names))
+
+    data_dir = Path(args.data_dir)
     train_data, dev_data, test_data = load_data(data_dir, tok)
 
-    if "train" in mode:
+    if "train" in args.mode:
         train(model, output_dir, train_data, dev_data)
-    if "test" in mode:
+    if "test" in args.mode:
         test_output_dir = output_dir / "test"
         test_output_dir.mkdir(exist_ok=True, parents=True)
         evaluate(model, test_output_dir, test_data)
