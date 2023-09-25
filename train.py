@@ -16,8 +16,9 @@ def load_model(pretrained_name: str, num_classes: int):
     model = BertForSequenceClassification.from_pretrained(
         pretrained_name,
         num_labels=num_classes,
+        local_files_only=True,
     ).cuda()
-    tok = BertTokenizerFast.from_pretrained(pretrained_name)
+    tok = BertTokenizerFast.from_pretrained(pretrained_name, local_files_only=True)
     return model, tok
 
 
@@ -44,6 +45,7 @@ def evaluate(
     total_loss = 0
     total_correct = 0
     total = 0
+    all_preds = []
     print("====== Evaluation start ======")
     for batch_idx, batch in enumerate(tqdm(valid_loader)):
         input_ids = batch["input_ids"].cuda()
@@ -53,6 +55,7 @@ def evaluate(
             outputs = model(input_ids, attention_mask=attention_mask)
             logits: Tensor = outputs.logits
             loss: Tensor = loss_fn(logits, labels)
+            all_preds.append(logits.argmax(dim=-1).cpu().numpy())
         total_loss += loss.item()
         total_correct += (logits.argmax(dim=-1) == labels).sum().item()
         total += len(labels)
@@ -72,6 +75,7 @@ def evaluate(
     print(f"Time elapsed: {time_elapsed:.2f}s")
     output_dir.mkdir(exist_ok=True, parents=True)
     dump_json(scores, output_dir / "scores.json")
+    dump_json(all_preds, output_dir / "all_preds.json")
     return scores
 
 
