@@ -55,7 +55,7 @@ def evaluate(
             outputs = model(input_ids, attention_mask=attention_mask)
             logits: Tensor = outputs.logits
             loss: Tensor = loss_fn(logits, labels)
-            all_preds.append(logits.argmax(dim=-1).cpu().numpy())
+            all_preds.append(logits.argmax(dim=-1).cpu().numpy().tolist())
         total_loss += loss.item()
         total_correct += (logits.argmax(dim=-1) == labels).sum().item()
         total += len(labels)
@@ -80,6 +80,7 @@ def evaluate(
 
 
 class_names = ["先秦", "秦汉", "魏晋南北朝", "隋唐", "宋", "元", "明", "清", "近现代", "当代"]
+class_names = ["上古汉语", "中古汉语", "近代汉语"]
 label_map = {label: i for i, label in enumerate(class_names)}
 
 
@@ -111,7 +112,8 @@ def train(
     output_dir.mkdir(exist_ok=True, parents=True)
     # Already shuffled
     train_loader = DataLoader(
-        train_dataset, batch_size=batch_size, collate_fn=collate_fn)
+        train_dataset, batch_size=batch_size, collate_fn=collate_fn
+    )
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.9)
     loss_fn = nn.CrossEntropyLoss()
@@ -213,7 +215,7 @@ def load_best_ckpt(output_dir: Path) -> nn.Module:
 
 def main():
     args = Args().parse_args()
-    output_dir = Path(args.output_dir, args.pretrained_name)
+    output_dir = Path(args.output_dir, args.pretrained_name, str(args.num_examples))
     output_dir.mkdir(exist_ok=True, parents=True)
     args.save(output_dir / "train_args.json")
 
@@ -231,7 +233,8 @@ def main():
     if "test" in args.mode:
         test_output_dir = output_dir / "test"
         test_output_dir.mkdir(exist_ok=True, parents=True)
-        evaluate(model, test_output_dir, test_data)
+        model = load_best_ckpt(output_dir)
+        evaluate(model, test_output_dir, test_data, batch_size=4 * args.batch_size)
 
 
 if __name__ == "__main__":

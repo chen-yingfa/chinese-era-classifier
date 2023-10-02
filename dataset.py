@@ -22,11 +22,32 @@ def load_souyun_examples(examples_path: Path, cnt: int | None = 100000) -> list[
         "魏晋": "魏晋南北朝",
         "南北朝": "魏晋南北朝",
     }
+    dynasty_name_map = {
+        "先秦": "上古汉语",
+        "秦": "上古汉语",
+        "汉": "上古汉语",
+        "辽": "中古汉语",
+        "金": "中古汉语",
+        "隋": "中古汉语",
+        "唐": "中古汉语",
+        "魏晋": "中古汉语",
+        "南北朝": "中古汉语",
+        "宋": "中古汉语",
+        "元": "近代汉语",
+        "明": "近代汉语",
+        "清": "近代汉语",
+        "近代": "近代汉语",
+        "当代": "近代汉语",
+        "近现代": "近代汉语",
+    }
     for i, eg in enumerate(tqdm(raw_examples)):
+        if len(examples) >= cnt:
+            break
         if eg["dynasty_name"] in dynasty_name_map:
             label = dynasty_name_map[eg["dynasty_name"]]
         else:
             label = eg["dynasty_name"]
+        assert label in ["上古汉语", "中古汉语", "近代汉语"], label
         for sent in eg["content"]:
             examples.append(
                 {
@@ -40,7 +61,7 @@ def load_souyun_examples(examples_path: Path, cnt: int | None = 100000) -> list[
                 "label": label,
             }
         )
-    return examples
+    return examples[:cnt]
 
 
 def create_features(
@@ -80,7 +101,8 @@ def load_features(
 
 
 class EraDataset(Dataset):
-    class_names = ["先秦", "秦汉", "魏晋南北朝", "隋唐", "宋", "元", "明", "清", "近现代", "当代"]
+    # class_names = ["先秦", "秦汉", "魏晋南北朝", "隋唐", "宋", "元", "明", "清", "近现代", "当代"]
+    class_names = ["上古汉语", "中古汉语", "近代汉语"]
 
     def __init__(
         self,
