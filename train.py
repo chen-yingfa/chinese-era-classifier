@@ -135,6 +135,7 @@ def train(
     while cur_ep < epochs:
         print(f"Epoch {cur_ep + 1}/{epochs}")
         epoch_loss = 0
+        ep_start_time = time.time()
         model.train()
         for batch_idx, batch in enumerate(train_loader):
             # Forward
@@ -165,7 +166,8 @@ def train(
                 )
         lr_scheduler.step()
         epoch_loss /= len(train_loader)
-        ep_time = time.time() - start_time
+        ep_time = time.time() - ep_start_time
+        total_time = time.time() - start_time
         print(f"Epoch time: {ep_time:.2f}s")
         print(f"Train loss: {epoch_loss:.4f}")
         train_results.append(
@@ -173,6 +175,7 @@ def train(
                 epoch=cur_ep,
                 loss=epoch_loss,
                 time=ep_time,
+                total_time=total_time,
             )
         )
 
@@ -185,10 +188,7 @@ def train(
         dev_result_path = ckpt_dir / "dev_result.json"
         print(f"Dumping dev result to {dev_result_path}")
         dump_json(dev_result, dev_result_path)
-        valid_loss = dev_result["loss"]
-        valid_acc = dev_result["acc"]
-        print(f"Valid loss: {valid_loss:.4f}")
-        print(f"Valid acc: {valid_acc:.4f}")
+        print(f"Validation result: {dev_result}")
         print("====== End of epoch ======")
         cur_ep += 1
 
