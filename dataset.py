@@ -24,6 +24,7 @@ def load_souyun_examples(examples_path: Path, cnt: Optional[int] = None) -> list
         "南北朝": "魏晋南北朝",
     }
     dynasty_name_map = {
+        "先秦": "上古汉语",
         "秦": "上古汉语",
         "汉": "上古汉语",
         "辽": "中古汉语",
