@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional, Union
 
 from tqdm import tqdm
 import torch
@@ -8,7 +9,7 @@ from torch.utils.data import Dataset
 from utils import load_json
 
 
-def load_souyun_examples(examples_path: Path, cnt: int | None = 100000) -> list[dict]:
+def load_souyun_examples(examples_path: Path, cnt: Optional[int] = None) -> list[dict]:
     print(f"Loading examples from {examples_path}")
     raw_examples = load_json(examples_path)[:cnt]
     examples = []
@@ -23,7 +24,6 @@ def load_souyun_examples(examples_path: Path, cnt: int | None = 100000) -> list[
         "南北朝": "魏晋南北朝",
     }
     dynasty_name_map = {
-        "先秦": "上古汉语",
         "秦": "上古汉语",
         "汉": "上古汉语",
         "辽": "中古汉语",
@@ -40,14 +40,18 @@ def load_souyun_examples(examples_path: Path, cnt: int | None = 100000) -> list[
         "当代": "近代汉语",
         "近现代": "近代汉语",
     }
+    labels = ["上古汉语", "中古汉语", "近代汉语"]
+    label_to_examples = {k: [] for k in labels}
     for i, eg in enumerate(tqdm(raw_examples)):
-        if len(examples) >= cnt:
+        if all(len(label_to_examples[k]) >= cnt for k in labels):
             break
         if eg["dynasty_name"] in dynasty_name_map:
             label = dynasty_name_map[eg["dynasty_name"]]
         else:
             label = eg["dynasty_name"]
-        assert label in ["上古汉语", "中古汉语", "近代汉语"], label
+        assert label in labels, label
+        if len(label_to_examples[label]) >= cnt:
+            continue
         for sent in eg["content"]:
             examples.append(
                 {
@@ -85,7 +89,7 @@ def load_features(
     examples_path: Path,
     tokenizer,
     label_map: dict[str, int],
-    num_examples: int | None,
+    num_examples: Optional[int] = None,
 ) -> dict[str, LongTensor]:
     if features_path.exists():
         print(f"Loading features from {features_path}")
@@ -106,10 +110,10 @@ class EraDataset(Dataset):
 
     def __init__(
         self,
-        data_path: Path | str,
+        data_path: Union[str, Path],
         tokenizer,
         cache_dir: str = ".data_cache",
-        num_examples: int | None = 100000,
+        num_examples: Optional[int] = None,
     ):
         self.data_path = Path(data_path)
         self.tokenizer = tokenizer
