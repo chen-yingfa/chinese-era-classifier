@@ -182,7 +182,9 @@ def train(
         torch.save(model, ckpt_dir / "model.pt")
         dev_result = evaluate(model, ckpt_dir, valid_dataset, batch_size=batch_size)
         dev_result["epoch"] = cur_ep
-        dump_json(dev_result, ckpt_dir / "dev_result.json")
+        dev_result_path = ckpt_dir / "dev_result.json"
+        print(f"Dumping dev result to {dev_result_path}")
+        dump_json(dev_result, dev_result_path)
         valid_loss = dev_result["loss"]
         valid_acc = dev_result["acc"]
         print(f"Valid loss: {valid_loss:.4f}")
