@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Optional, Union
+import random
 
 from tqdm import tqdm
 import torch
@@ -68,7 +69,8 @@ def load_souyun_examples(examples_path: Path, cnt: Optional[int] = None) -> list
             }
         )
     examples = sum(label_to_examples.values(), [])
-    return examples[:cnt]
+    examples = random.sample(examples, cnt)
+    return examples
 
 
 def create_features(
