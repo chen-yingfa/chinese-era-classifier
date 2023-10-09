@@ -12,7 +12,6 @@ from utils import load_json
 def load_souyun_examples(examples_path: Path, cnt: Optional[int] = None) -> list[dict]:
     print(f"Loading examples from {examples_path}")
     raw_examples = load_json(examples_path)[:cnt]
-    examples = []
     dynasty_name_map = {
         "秦": "秦汉",
         "汉": "秦汉",
@@ -42,6 +41,8 @@ def load_souyun_examples(examples_path: Path, cnt: Optional[int] = None) -> list
         "近现代": "近代汉语",
     }
     labels = ["上古汉语", "中古汉语", "近代汉语"]
+
+    # We try to have the same number of examples for each label
     label_to_examples = {k: [] for k in labels}
     for i, eg in enumerate(tqdm(raw_examples)):
         if all(len(label_to_examples[k]) >= cnt for k in labels):
@@ -54,18 +55,19 @@ def load_souyun_examples(examples_path: Path, cnt: Optional[int] = None) -> list
         if len(label_to_examples[label]) >= cnt:
             continue
         for sent in eg["content"]:
-            examples.append(
+            label_to_examples[label].append(
                 {
                     "text": sent,
                     "label": label,
                 }
             )
-        examples.append(
+        label_to_examples[label].append(
             {
                 "text": eg["title"],
                 "label": label,
             }
         )
+    examples = sum(label_to_examples.values(), [])
     return examples[:cnt]
 
 
